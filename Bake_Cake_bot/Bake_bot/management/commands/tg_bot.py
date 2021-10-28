@@ -353,7 +353,7 @@ def choose_option6(update: Update, context: CallbackContext):
     if user_input == 'Без надписи':
         pass
     else:
-        context.user_data['Надпись'] = ' Есть', user_input
+        context.user_data['Надпись'] = 'Есть', user_input
 
     option7_keyboard = [['Без комментариев'], ['ГЛАВНОЕ МЕНЮ']]
     update.message.reply_text('Если вы хотите оставить какие-то комментарии к заказу '
@@ -484,7 +484,7 @@ def send_order(update: Update, context: CallbackContext):
             except:
                 pass
         print(context.user_data['Надпись'])
-        if context.user_data['Надпись'] == 'Есть':
+        if context.user_data['Надпись'][0] == 'Есть':
             total_price += 500
         if context.user_data['Срочность'] == 'Срочно':
             total_price *= 1.2
