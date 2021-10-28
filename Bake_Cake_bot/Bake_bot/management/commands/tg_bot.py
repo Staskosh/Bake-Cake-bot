@@ -1,4 +1,4 @@
-TG_TOKEN = '2087101616:AAEhpiKxkxaImTkIvEvy8hV1MiAlpxcIr_4' #@BakeCakeBot
+TG_TOKEN = '2087101616:AAEhpiKxkxaImTkIvEvy8hV1MiAlpxcIr_4'  #@BakeCakeBot
 
 from environs import Env
 
@@ -7,7 +7,6 @@ from Bake_bot.models import Customer, Order
 
 import logging
 from datetime import datetime, timedelta
-
 
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update, KeyboardButton
 from telegram.ext import (
@@ -27,24 +26,23 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 (
-    MAIN, #основное меню
-    PD, # добавляем ПД в БД, def add_pd
-    CONTACT, #добавляем контакты в БД, def add_contact
-    LOCATION, #добавляем адрес в БД, def add_address
-    ORDER, #БОТ - собрать торт, def make_cake  
-    OPTION1, #записывает опцию 'Количество уровней', предлагает опцию 'Форма', def choose_option1
-    OPTION2, #записывает опцию 'Форма', предлагает опцию 'Топпинг', def choose_option2
-    OPTION3, #записывает опцию 'Топпинг', предлагает опцию 'Ягоды', def choose_option3
-    OPTION4, #записывает опцию 'Ягоды', предлагает опцию 'Декор', def choose_option4
-    OPTION5, #записывает опцию 'Декор', предлагает опцию 'Надпись', def choose_option5
-    OPTION6, #записывает опцию 'Надпись', предлагает опцию 'Коммент', def choose_option6
-    OPTION7, #записывает опцию 'Комментарии', предлагает опцию 'Адрес', def choose_option7
-    OPTION8, #записывает опцию 'Адрес', предлагает опцию 'Дата и время доставки', def choose_option8
-    CONFIRM_ORDER, #записывает опцию 'Дата и время доставки', записывает все детали заказа, 
-                    #предлагает подтвердить заказ, def confirm_order
-    SEND_ORDER, #считает стоимость заказа, записывает заказ в БД, def send_order   
-  )  = range(15)
-
+    MAIN,  # основное меню
+    PD,  # добавляем ПД в БД, def add_pd
+    CONTACT,  # добавляем контакты в БД, def add_contact
+    LOCATION,  # добавляем адрес в БД, def add_address
+    ORDER,  # БОТ - собрать торт, def make_cake
+    OPTION1,  # записывает опцию 'Количество уровней', предлагает опцию 'Форма', def choose_option1
+    OPTION2,  # записывает опцию 'Форма', предлагает опцию 'Топпинг', def choose_option2
+    OPTION3,  # записывает опцию 'Топпинг', предлагает опцию 'Ягоды', def choose_option3
+    OPTION4,  # записывает опцию 'Ягоды', предлагает опцию 'Декор', def choose_option4
+    OPTION5,  # записывает опцию 'Декор', предлагает опцию 'Надпись', def choose_option5
+    OPTION6,  # записывает опцию 'Надпись', предлагает опцию 'Коммент', def choose_option6
+    OPTION7,  # записывает опцию 'Комментарии', предлагает опцию 'Адрес', def choose_option7
+    OPTION8,  # записывает опцию 'Адрес', предлагает опцию 'Дата и время доставки', def choose_option8
+    CONFIRM_ORDER,  # записывает опцию 'Дата и время доставки', записывает все детали заказа,
+    # предлагает подтвердить заказ, def confirm_order
+    SEND_ORDER,  # считает стоимость заказа, записывает заказ в БД, def send_order
+) = range(15)
 
 options = {
     '1 уровень': 400,
@@ -53,12 +51,12 @@ options = {
     'Квадрат': 600,
     'Круг': 400,
     'Прямоугольник': 1000,
-    'Без декора': 0, 
-    'Фисташки': 300, 
-    'Безе': 400, 
-    'Фундук': 350, 
-    'Пекан': 300, 
-    'Маршмеллоу': 200, 
+    'Без декора': 0,
+    'Фисташки': 300,
+    'Безе': 400,
+    'Фундук': 350,
+    'Пекан': 300,
+    'Маршмеллоу': 200,
     'Марципан': 280,
     'Надпись': 500,
 }
@@ -75,26 +73,26 @@ def start(update: Update, context: CallbackContext) -> int:
     try:
         Customer.objects.get(external_id=update.message.chat_id)
         update.message.reply_text(
-        f' Здравствуйте, {user.first_name}! '
-        ' Вас приветствует сервис "Изготовление тортов на заказ"! '
-        ' Выберите ингредиенты, форму, основу, надпись, а мы привезем готовый торт к вашему празднику.',       
-        reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
+            f' Здравствуйте, {user.first_name}! '
+            ' Вас приветствует сервис "Изготовление тортов на заказ"! '
+            ' Выберите ингредиенты, форму, основу, надпись, а мы привезем готовый торт к вашему празднику.',
+            reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
         )
     except:
         update.message.reply_text(
-        f' Здравствуйте, {user.first_name}! '
-        ' Вас приветствует сервис "Изготовление тортов на заказ"! '
-        ' Вы у нас впервые? Давайте зарегистрируемся. ',
+            f' Здравствуйте, {user.first_name}! '
+            ' Вас приветствует сервис "Изготовление тортов на заказ"! '
+            ' Вы у нас впервые? Давайте зарегистрируемся. ',
         )
     # добавляем юзера в ДБ, проверяем есть ли пд, контакт и адрес
     is_contact, is_address, is_pd = add_user_to_db(update.message.chat_id, user)
     if not is_pd:
-        with open("pd.pdf", 'rb') as file:
+        with open("D:\\DevMan\\Bake-Cake-bot-main\\pd.pdf", 'rb') as file:
             context.bot.send_document(chat_id=update.message.chat_id, document=file)
         reply_keyboard = [['Принять', 'Отказаться']]
         update.message.reply_text(
-        text='Для заказа нужно ваше согласие на обработку персональных данных',
-        reply_markup=ReplyKeyboardMarkup(
+            text='Для заказа нужно ваше согласие на обработку персональных данных',
+            reply_markup=ReplyKeyboardMarkup(
                 reply_keyboard, one_time_keyboard=True, resize_keyboard=True
             ),
         )
@@ -113,13 +111,13 @@ def start(update: Update, context: CallbackContext) -> int:
     update.message.reply_text('Что желаете?',
                               reply_markup=ReplyKeyboardMarkup(
                                   main_keyboard, one_time_keyboard=True,
-        resize_keyboard=True, input_field_placeholder='Что желаете?'
-                                  ),
+                                  resize_keyboard=True, input_field_placeholder='Что желаете?'
+                              ),
                               )
     return ORDER
 
 
-#добавляем юзера в ДБ
+# добавляем юзера в ДБ
 def add_user_to_db(chat_id, user):
     customer, _ = Customer.objects.get_or_create(external_id=chat_id)
 
@@ -131,69 +129,73 @@ def add_user_to_db(chat_id, user):
     logger.info(f'Update_user {customer.external_id} '
                 f'first_name {customer.first_name} '
                 f'last_name {customer.last_name} '
-                f'contact {customer.contact} '
-                f'address {customer.address} ')
-    return customer.contact, customer.address, customer.pd
+                f'contact {customer.phone_number} '
+                f'address {customer.home_address} ')
+    return customer.phone_number, customer.home_address, customer.GDPR_status
 
-#добавляем ПД в БД
+
+# добавляем ПД в БД
 def add_pd(update, context):
     customer = Customer.objects.get(external_id=update.message.chat_id)
     answer = update.message.text
     if answer == 'Принять':
-        customer.pd = True
+        customer.GDPR_status = True
         update.message.reply_text(
-        f'Добавлено согласие на обработку данных.',
+            f'Добавлено согласие на обработку данных.',
         )
         logger.info(f'Пользователю {customer.external_id}'
-        f'Добавлено согласие на обработку данных: {customer.pd}')
+                    f'Добавлено согласие на обработку данных: {customer.GDPR_status}')
         customer.save()
-        if not customer.contact:
+        if not customer.phone_number:
             update.message.reply_text(
                 text='У меня нет вашего телефона, напишите, пожалуйста.',
             )
             return CONTACT
     elif answer == 'Отказаться':
         update.message.reply_text(
-        f'Извините, без согласия на обработку данных заказы невозможны.',
+            f'Извините, без согласия на обработку данных заказы невозможны.',
         )
         return PD
 
 
-#добавляем контакты в БД
+# добавляем контакты в БД
 def add_contact(update, context):
     customer = Customer.objects.get(external_id=update.message.chat_id)
-    customer.contact = update.message.text
+    customer.phone_number = update.message.text
     customer.save()
     update.message.reply_text(
-        f'Добавлен контакт для связи: {customer.contact}',
+        f'Добавлен контакт для связи: {customer.phone_number}',
     )
     logger.info(f'Пользователю {customer.external_id}'
-        f'добавлен контакт {customer.contact}')
-    if not customer.address:
+                f'добавлен контакт {customer.phone_number}')
+    if not customer.home_address:
         update.message.reply_text(
             text='Напишите, пожалуйста, адрес для доставки.',
         )
         return LOCATION
     return MAIN
 
-#добавляем адрес в БД
+
+# добавляем адрес в БД
 def add_address(update: Update, context):
     customer = Customer.objects.get(external_id=update.message.chat_id)
-    customer.address = update.message.text
+    customer.home_address = update.message.text
     customer.save()
     update.message.reply_text(
-        f'Добавлен адрес доставки: {customer.address}',
+        f'Добавлен адрес доставки: {customer.home_address}',
         reply_markup=ReplyKeyboardMarkup(
             main_keyboard, resize_keyboard=True, one_time_keyboard=True
         )
     )
     logger.info(f'Пользователю {customer.external_id}'
-        f'добавлен контакт {customer.address}')
+                f'добавлен контакт {customer.home_address}')
     return ORDER
 
 
 temp_order = {}
-#БОТ - собрать торт
+
+
+# БОТ - собрать торт
 def make_cake(update: Update, context):
     user = update.message.from_user
     logger.info("choice of %s, %s: %s", user.first_name,
@@ -209,10 +211,11 @@ def make_cake(update: Update, context):
     update.message.reply_text(
         'Начнем! Выберите количество уровней',
         reply_markup=ReplyKeyboardMarkup(option1_keyboard, resize_keyboard=True, one_time_keyboard=True)
-        )
+    )
     return OPTION1
 
-#записывает опцию 'Количество уровней', предлагает опцию 'Форма'
+
+# записывает опцию 'Количество уровней', предлагает опцию 'Форма'
 def choose_option1(update: Update, context: CallbackContext):
     user_input = update.effective_message.text
     context.user_data['Количество уровней'] = user_input
@@ -229,7 +232,8 @@ def choose_option1(update: Update, context: CallbackContext):
                                                                one_time_keyboard=True))
     return OPTION2
 
-#записывает опцию 'Форма', предлагает опцию 'Топпинг'
+
+# записывает опцию 'Форма', предлагает опцию 'Топпинг'
 def choose_option2(update: Update, context: CallbackContext):
     user_input = update.effective_message.text
     context.user_data['Форма'] = user_input
@@ -241,19 +245,19 @@ def choose_option2(update: Update, context: CallbackContext):
         )
         return MAIN
     option3_keyboard = [
-                    ['Без топпинга'],
-                    ['Белый соус', 'Карамельный сироп'], 
-                    ['Кленовый сироп', 'Клубничный сироп'], 
-                    ['Черничный сироп', 'Молочный шоколад'],
-                    ['ГЛАВНОЕ МЕНЮ']
-                    ]
+        ['Без топпинга'],
+        ['Белый соус', 'Карамельный сироп'],
+        ['Кленовый сироп', 'Клубничный сироп'],
+        ['Черничный сироп', 'Молочный шоколад'],
+        ['ГЛАВНОЕ МЕНЮ']
+    ]
     update.message.reply_text('Выберите топпинг',
                               reply_markup=ReplyKeyboardMarkup(option3_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
     return OPTION3
 
 
-#записывает опцию 'Топпинг', предлагает опцию 'Ягоды', def choose_option3
+# записывает опцию 'Топпинг', предлагает опцию 'Ягоды', def choose_option3
 def choose_option3(update: Update, context: CallbackContext):
     user_input = update.effective_message.text
     context.user_data['Топпинг'] = user_input
@@ -265,19 +269,18 @@ def choose_option3(update: Update, context: CallbackContext):
         )
         return MAIN
     option4_keyboard = [
-                    ['Без ягод'],
-                    ['Ежевика', 'Малина'], 
-                    ['Голубика', 'Клубника'], 
-                    ['ГЛАВНОЕ МЕНЮ']
-                    ]
+        ['Без ягод'],
+        ['Ежевика', 'Малина'],
+        ['Голубика', 'Клубника'],
+        ['ГЛАВНОЕ МЕНЮ']
+    ]
     update.message.reply_text('Выберите ягоды',
                               reply_markup=ReplyKeyboardMarkup(option4_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
     return OPTION4
 
 
-
-#записывает опцию 'Ягоды', предлагает опцию 'Декор'
+# записывает опцию 'Ягоды', предлагает опцию 'Декор'
 def choose_option4(update: Update, context: CallbackContext):
     user_input = update.effective_message.text
     context.user_data['Ягоды'] = user_input
@@ -289,17 +292,18 @@ def choose_option4(update: Update, context: CallbackContext):
         )
         return MAIN
     option5_keyboard = [
-                       ['Без декора'], 
-                       ['Фисташки', 'Безе', 'Фундук'], 
-                       ['Пекан', 'Маршмеллоу', 'Марципан'], 
-                       ['ГЛАВНОЕ МЕНЮ']
-                       ]
+        ['Без декора'],
+        ['Фисташки', 'Безе', 'Фундук'],
+        ['Пекан', 'Маршмеллоу', 'Марципан'],
+        ['ГЛАВНОЕ МЕНЮ']
+    ]
     update.message.reply_text('Выберите декор',
                               reply_markup=ReplyKeyboardMarkup(option5_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
     return OPTION5
 
-#записывает опцию 'Декор', предлагает опцию 'Надпись'
+
+# записывает опцию 'Декор', предлагает опцию 'Надпись'
 def choose_option5(update: Update, context: CallbackContext):
     user_input = update.effective_message.text
     context.user_data['Декор'] = user_input
@@ -312,12 +316,13 @@ def choose_option5(update: Update, context: CallbackContext):
         return MAIN
     option6_keyboard = [['Без надписи'], ['ГЛАВНОЕ МЕНЮ']]
     update.message.reply_text('Мы можем разместить на торте любую надпись, например: "С днем рождения!" '
-                              'Введите текст надписи или нажмите "Без надписи"', 
+                              'Введите текст надписи или нажмите "Без надписи"',
                               reply_markup=ReplyKeyboardMarkup(option6_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
     return OPTION6
 
-#записывает опцию 'Надпись', предлагает опцию 'Коммент'
+
+# записывает опцию 'Надпись', предлагает опцию 'Коммент'
 def choose_option6(update: Update, context: CallbackContext):
     user_input = update.effective_message.text
     context.user_data['Надпись'] = user_input
@@ -336,13 +341,13 @@ def choose_option6(update: Update, context: CallbackContext):
 
     option7_keyboard = [['Без комментариев'], ['ГЛАВНОЕ МЕНЮ']]
     update.message.reply_text('Если вы хотите оставить какие-то комментарии к заказу '
-                              '- введите текст или нажмите "Без комментариев"', 
+                              '- введите текст или нажмите "Без комментариев"',
                               reply_markup=ReplyKeyboardMarkup(option7_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
     return OPTION7
 
 
-#записывает опцию 'Комментарии', предлагает опцию 'Адрес'
+# записывает опцию 'Комментарии', предлагает опцию 'Адрес'
 def choose_option7(update: Update, context: CallbackContext):
     user_input = update.effective_message.text
     context.user_data['Комментарии'] = user_input
@@ -356,27 +361,27 @@ def choose_option7(update: Update, context: CallbackContext):
 
     option8_keyboard = [['Не менять адрес'], ['ГЛАВНОЕ МЕНЮ']]
     update.message.reply_text('Если вы хотите изменить адрес доставки - напишите его '
-                              'или нажмите "Не менять адрес"', 
+                              'или нажмите "Не менять адрес"',
                               reply_markup=ReplyKeyboardMarkup(option8_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
     return OPTION8
 
 
-#записывает опцию 'Адрес', предлагает опцию 'Дата и время доставки'
+# записывает опцию 'Адрес', предлагает опцию 'Дата и время доставки'
 def choose_option8(update: Update, context: CallbackContext):
     user_input = update.effective_message.text
     context.user_data['Адрес'] = user_input
 
     if user_input == 'Не менять адрес':
         customer = Customer.objects.get(external_id=update.effective_user.id)
-        context.user_data['Адрес'] = customer.address
+        context.user_data['Адрес'] = customer.home_address
 
     if user_input == 'ГЛАВНОЕ МЕНЮ':
         update.message.reply_text(
             'Собрать новый торт или посмотреть заказы?',
             reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
         )
-        return MAIN  
+        return MAIN
 
     option9_keyboard = [['Как можно быстрее'], ['ГЛАВНОЕ МЕНЮ']]
     update.message.reply_text('Напишите желаемую дату и время доставки в формате "DD.MM.YYYY HH-MM" '
@@ -387,8 +392,7 @@ def choose_option8(update: Update, context: CallbackContext):
     return CONFIRM_ORDER
 
 
-
-#записывает опцию 'Дата и время доставки', записывает все детали заказа, предлагает подтвердить заказ
+# записывает опцию 'Дата и время доставки', записывает все детали заказа, предлагает подтвердить заказ
 def confirm_order(update: Update, context: CallbackContext):
     user_input = update.effective_message.text
     try:
@@ -416,7 +420,7 @@ def confirm_order(update: Update, context: CallbackContext):
             reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
         )
         return MAIN
-    
+
     temp_order.update(
         {
             'Количество уровней': context.user_data.get('Количество уровней'),
@@ -437,7 +441,8 @@ def confirm_order(update: Update, context: CallbackContext):
                                                                one_time_keyboard=True))
     return SEND_ORDER
 
-#считает стоимость заказа, записывает заказ в БД
+
+# считает стоимость заказа, записывает заказ в БД
 def send_order(update: Update, context: CallbackContext):
     user_input = update.effective_message.text
 
@@ -466,17 +471,17 @@ def send_order(update: Update, context: CallbackContext):
         if context.user_data['Срочность'] == 1:
             total_price *= 1.2
 
-
         order_keyboard = [['Собрать торт'], ['ГЛАВНОЕ МЕНЮ']]
         update.message.reply_text(
             f'Заказ принят! Стоимость вашего заказа {total_price} руб.',
-            reply_markup=ReplyKeyboardMarkup(order_keyboard, resize_keyboard=True, one_time_keyboard=True)) 
+            reply_markup=ReplyKeyboardMarkup(order_keyboard, resize_keyboard=True, one_time_keyboard=True))
         logger.info(f"Итоговая цена {total_price} "
-                    f'Выбранные опции {temp_order}')                                                    
-        create_new_order(update.message.chat_id, str(temp_order), total_price)                                                      
+                    f'Выбранные опции {temp_order}')
+        create_new_order(update.message.chat_id, str(temp_order), total_price)
     return ORDER
 
-#создаем заказ в БД
+
+# создаем заказ в БД
 def create_new_order(chat_id, details, price):
     сustomer = Customer.objects.get(external_id=chat_id)
     order = Order.objects.create(
@@ -488,26 +493,20 @@ def create_new_order(chat_id, details, price):
     temp_order.clear()
 
 
-
-
-
-
-
-
-#БОТ - команда стоп
+# БОТ - команда стоп
 def stop(update, context):
     user = update.effective_user
     update.message.reply_text(f'До свидания, {user.first_name}!')
     return ConversationHandler.END
 
 
-#БОТ - нераспознанная команда
+# БОТ - нераспознанная команда
 def unknown(update, context):
     reply_keyboard = [['ГЛАВНОЕ МЕНЮ']]
     update.message.reply_text(
         'Извините, не понял, что вы хотели этим сказать, начнем сначала',
         reply_markup=ReplyKeyboardMarkup(
-                reply_keyboard, one_time_keyboard=True, resize_keyboard=True
+            reply_keyboard, one_time_keyboard=True, resize_keyboard=True
         )
     )
     return MAIN
@@ -516,7 +515,6 @@ def unknown(update, context):
 def error(bot, update, error):
     logger.error('Update "%s" caused error "%s"', update, error)
     return MAIN
-
 
 
 class Command(BaseCommand):
@@ -556,8 +554,6 @@ class Command(BaseCommand):
                 CONFIRM_ORDER: [MessageHandler(Filters.text & ~Filters.command, confirm_order)],
                 SEND_ORDER: [MessageHandler(Filters.text & ~Filters.command, send_order)],
 
-
-                
             },
             fallbacks=[CommandHandler('stop', stop)],
         )
