@@ -39,7 +39,7 @@ class Product(models.Model):
         verbose_name = 'Продукт'
         verbose_name_plural = 'Продукты'
 
-class Productproperties(models.Model):
+class Product_properties(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     property_name = models.CharField(max_length=256)
 
@@ -51,7 +51,7 @@ class Productproperties(models.Model):
         verbose_name_plural = 'Свойства Продуктов'
 
 class Product_parameters(models.Model):
-    product_property = models.ForeignKey(Productproperties, verbose_name='Свойства Продукта', on_delete=models.CASCADE)
+    product_property = models.ForeignKey(Product_properties, verbose_name='Свойства Продукта', on_delete=models.CASCADE)
     parameter_name = models.CharField(verbose_name='Название параметра', max_length=256)
     parameter_price = models.PositiveIntegerField(
         verbose_name='Цена',
@@ -63,6 +63,9 @@ class Product_parameters(models.Model):
 
 class Order(models.Model):
     order_number = models.PositiveIntegerField("Номер заказа", null=True, default=None, unique=True)
+    customer = models.CharField(verbose_name='Имя Покупателя', null=True, blank=True,
+        max_length=256)
+    order_details = jsonfield.JSONField(verbose_name='Детали заказа', default='Пока нет ничего')
     order_price  = models.PositiveIntegerField(
         verbose_name='Цена заказа',
     )
@@ -83,13 +86,13 @@ class Order(models.Model):
     )
     comments = models.CharField(verbose_name='Комментарии', null=True, blank=True,
         max_length=256)
-    delivery_address = models.CharField(verbose_name='Адрес доставки',
-        max_length=256, default=' ')
-    delivery_date = models.DateField(verbose_name='Дата доставки', null=True, blank=True)
-    delivery_time = models.TimeField(verbose_name='Время доставки', null=True, blank=True)
+    # delivery_address = models.CharField(verbose_name='Адрес доставки',
+    #     max_length=256, default=' ')
+    # delivery_date = models.DateField(verbose_name='Дата доставки', null=True, blank=True)
+    # delivery_time = models.TimeField(verbose_name='Время доставки', null=True, blank=True)
 
-    def __str__(self):
-        return self.delivery_time.isoformat(timespec='minutes')
+    # def __str__(self):
+    #     return self.delivery_time.isoformat(timespec='minutes')
 
     class Meta:
         verbose_name = 'Заказ'

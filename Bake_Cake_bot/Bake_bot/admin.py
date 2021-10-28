@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Customer, Product, Productproperties, Product_parameters, Order
+from .models import Customer, Product, Product_properties, Product_parameters, Order
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
@@ -11,7 +11,7 @@ class CustomerAdmin(admin.ModelAdmin):
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('id', 'product_name')
 
-@admin.register(Productproperties)
+@admin.register(Product_properties)
 class ProductpropertiesAdmin(admin.ModelAdmin):
     list_display = ('product', 'property_name')
 
@@ -21,6 +21,6 @@ class Product_parametersAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('order_number', 'order_status', 'comments', 'delivery_address', 'delivery_date', 'delivery_time')
-
+    list_display = ('customer', 'order_details', 'order_number', 'order_status', 'comments') #'delivery_address', 'delivery_date', 'delivery_time'
+    list_filter = ["order_status"]
 # Register your models here.
