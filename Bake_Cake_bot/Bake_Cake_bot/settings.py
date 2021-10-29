@@ -126,4 +126,4 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-TOKEN = env.str('TG_TOKEN')
+#TOKEN = env.str('TG_TOKEN')
