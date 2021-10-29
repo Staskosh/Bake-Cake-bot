@@ -228,7 +228,22 @@ def make_cake(update: Update, context):
             'Собрать новый торт или посмотреть заказы?',
             reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
         )
-        return MAIN
+        return ORDER
+    
+    if user_input == 'Ваши заказы':
+        orders = Order.objects.filter(customer_chat_id=update.effective_message.chat_id)
+        for order in orders:
+            update.message.reply_text(
+            f'Заказ {order.order_number}: цена {order.order_price} руб., статус "{order.order_status}",' 
+            f'детали - {order.order_details}',
+            )
+        context.bot.send_message(
+            chat_id=update.effective_message.chat_id,
+            text = 'Собрать новый торт или посмотреть заказы?',
+            reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
+        )
+        return ORDER
+
     parameters = []
     for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Количество уровней'):
         parameters.append(parameter.parameter_name)
@@ -513,10 +528,10 @@ def send_order(update: Update, context: CallbackContext):
 def create_new_order(chat_id, details, price):
     print(Customer.objects.get(external_id=chat_id).first_name)
     order = Order.objects.create(
-        order_number=Order.objects.latest('order_number').order_number + 1,
-        #сustomer=chat_id,
-        order_details=details,
-        order_price=price,
+    order_number=Order.objects.latest('order_number').order_number + 1,
+    customer_chat_id=chat_id,
+    order_details=details,
+    order_price=price,
     )
     order.save
     temp_order.clear()
