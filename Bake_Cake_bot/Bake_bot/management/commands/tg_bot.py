@@ -244,15 +244,19 @@ def make_cake(update: Update, context):
         )
         return ORDER
 
-    parameters = []
-    for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Количество уровней'):
-        parameters.append(parameter.parameter_name)
-    option1_keyboard = [parameters, ['ГЛАВНОЕ МЕНЮ']]
-    update.message.reply_text(
-        'Начнем! Выберите количество уровней',
-        reply_markup=ReplyKeyboardMarkup(option1_keyboard, resize_keyboard=True, one_time_keyboard=True)
-    )
-    return OPTION1
+    if user_input == 'Собрать торт':
+        parameters = []
+        for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Количество уровней'):
+            parameters.append(parameter.parameter_name)
+        option1_keyboard = [parameters, ['ГЛАВНОЕ МЕНЮ']]
+        update.message.reply_text(
+            'Начнем! Выберите количество уровней',
+            reply_markup=ReplyKeyboardMarkup(option1_keyboard, resize_keyboard=True, one_time_keyboard=True)
+        )
+        return OPTION1
+    else:
+        unknown(update, context)
+        
 
 
 # записывает опцию 'Количество уровней', предлагает опцию 'Форма'
@@ -266,14 +270,18 @@ def choose_option1(update: Update, context: CallbackContext):
             reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
         )
         return MAIN
+
     parameters = []
     for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Форма'):
         parameters.append(parameter.parameter_name)
+
     option2_keyboard = [parameters, ['ГЛАВНОЕ МЕНЮ']]
     update.message.reply_text('Выберите форму',
                               reply_markup=ReplyKeyboardMarkup(option2_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
     return OPTION2
+
+    
 
 
 # записывает опцию 'Форма', предлагает опцию 'Топпинг'
@@ -290,6 +298,7 @@ def choose_option2(update: Update, context: CallbackContext):
     parameters = []
     for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Топпинг'):
         parameters.append(parameter.parameter_name)
+
     option3_keyboard = [parameters,['ГЛАВНОЕ МЕНЮ']
     ]
     update.message.reply_text('Выберите топпинг',
@@ -312,6 +321,7 @@ def choose_option3(update: Update, context: CallbackContext):
     parameters = []
     for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Ягоды'):
         parameters.append(parameter.parameter_name)
+
     option4_keyboard = [parameters,
         ['ГЛАВНОЕ МЕНЮ']
     ]
@@ -335,6 +345,7 @@ def choose_option4(update: Update, context: CallbackContext):
     parameters = []
     for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Декор'):
         parameters.append(parameter.parameter_name)
+
     option5_keyboard = [parameters,
         ['ГЛАВНОЕ МЕНЮ']
     ]
@@ -443,6 +454,14 @@ def confirm_order(update: Update, context: CallbackContext):
         date_time_delivery = datetime.strptime(user_input, "%d.%m.%Y %H-%M")
         context.user_data['Дата и время доставки'] = str(date_time_delivery)
 
+        if date_time_delivery < datetime.now():
+            option9_keyboard = [['Как можно быстрее'], ['ГЛАВНОЕ МЕНЮ']]
+            update.message.reply_text(
+            'Время не может быть раньше текущего! Введите заново '
+            '(например: 27.10.2021 10-00) или нажмите "Как можно быстрее".',
+            reply_markup=ReplyKeyboardMarkup(option9_keyboard, resize_keyboard=True, one_time_keyboard=True))
+            return CONFIRM_ORDER
+
         if date_time_delivery < datetime.now() + timedelta(hours=24):
             context.user_data['Срочность'] = 'Срочно'
         else:
@@ -537,13 +556,6 @@ def create_new_order(chat_id, details, price):
     temp_order.clear()
 
 
-# БОТ - команда стоп
-def stop(update, context):
-    user = update.effective_user
-    update.message.reply_text(f'До свидания, {user.first_name}!')
-    return ConversationHandler.END
-
-
 # БОТ - нераспознанная команда
 def unknown(update, context):
     reply_keyboard = [['ГЛАВНОЕ МЕНЮ']]
@@ -583,23 +595,37 @@ class Command(BaseCommand):
                     MessageHandler(Filters.text & ~Filters.command,
                                    unknown)
                 ],
-                PD: [MessageHandler(Filters.text & ~Filters.command, add_pd)],
-                CONTACT: [MessageHandler(Filters.text & ~Filters.command, add_contact)],
-                LOCATION: [MessageHandler(Filters.text & ~Filters.command, add_address)],
-                ORDER: [MessageHandler(Filters.text & ~Filters.command, make_cake)],
-                OPTION1: [MessageHandler(Filters.text & ~Filters.command, choose_option1)],
-                OPTION2: [MessageHandler(Filters.text & ~Filters.command, choose_option2)],
-                OPTION3: [MessageHandler(Filters.text & ~Filters.command, choose_option3)],
-                OPTION4: [MessageHandler(Filters.text & ~Filters.command, choose_option4)],
-                OPTION5: [MessageHandler(Filters.text & ~Filters.command, choose_option5)],
-                OPTION6: [MessageHandler(Filters.text & ~Filters.command, choose_option6)],
-                OPTION7: [MessageHandler(Filters.text & ~Filters.command, choose_option7)],
-                OPTION8: [MessageHandler(Filters.text & ~Filters.command, choose_option8)],
-                CONFIRM_ORDER: [MessageHandler(Filters.text & ~Filters.command, confirm_order)],
-                SEND_ORDER: [MessageHandler(Filters.text & ~Filters.command, send_order)],
-
+                PD: [MessageHandler(Filters.text & ~Filters.command, add_pd), 
+                     MessageHandler(Filters.text & ~Filters.command, unknown)],
+                CONTACT: [MessageHandler(Filters.text & ~Filters.command, add_contact), 
+                     MessageHandler(Filters.text & ~Filters.command, unknown)],
+                LOCATION: [MessageHandler(Filters.text & ~Filters.command, add_address), 
+                     MessageHandler(Filters.text & ~Filters.command, unknown)],
+                ORDER: [MessageHandler(Filters.text & ~Filters.command, make_cake), 
+                     MessageHandler(Filters.text & ~Filters.command, unknown)],
+                OPTION1: [MessageHandler(Filters.text & ~Filters.command, choose_option1), 
+                     MessageHandler(Filters.text & ~Filters.command, unknown)],
+                OPTION2: [MessageHandler(Filters.text & ~Filters.command, choose_option2), 
+                     MessageHandler(Filters.text & ~Filters.command, unknown)],
+                OPTION3: [MessageHandler(Filters.text & ~Filters.command, choose_option3), 
+                     MessageHandler(Filters.text & ~Filters.command, unknown)],
+                OPTION4: [MessageHandler(Filters.text & ~Filters.command, choose_option4), 
+                     MessageHandler(Filters.text & ~Filters.command, unknown)],
+                OPTION5: [MessageHandler(Filters.text & ~Filters.command, choose_option5), 
+                     MessageHandler(Filters.text & ~Filters.command, unknown)],
+                OPTION6: [MessageHandler(Filters.text & ~Filters.command, choose_option6), 
+                     MessageHandler(Filters.text & ~Filters.command, unknown)],
+                OPTION7: [MessageHandler(Filters.text & ~Filters.command, choose_option7), 
+                     MessageHandler(Filters.text & ~Filters.command, unknown)],
+                OPTION8: [MessageHandler(Filters.text & ~Filters.command, choose_option8), 
+                     MessageHandler(Filters.text & ~Filters.command, unknown)],
+                CONFIRM_ORDER: [MessageHandler(Filters.text & ~Filters.command, confirm_order), 
+                     MessageHandler(Filters.text & ~Filters.command, unknown)],
+                SEND_ORDER: [MessageHandler(Filters.text & ~Filters.command, send_order), 
+                     MessageHandler(Filters.text & ~Filters.command, unknown)],
             },
-            fallbacks=[CommandHandler('stop', stop)],
+            fallbacks=[MessageHandler(Filters.text & ~Filters.command, unknown)],
+        allow_reentry=True,
         )
 
         dispatcher.add_handler(conv_handler)
