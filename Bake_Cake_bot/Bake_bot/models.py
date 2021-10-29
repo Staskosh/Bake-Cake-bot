@@ -63,8 +63,10 @@ class Product_parameters(models.Model):
 
 class Order(models.Model):
     order_number = models.PositiveIntegerField("Номер заказа", null=True, default=None, unique=True)
-    customer = models.CharField(verbose_name='Имя Покупателя', null=True, blank=True,
+    customer_chat_id = models.CharField(verbose_name='Chat ID Покупателя', null=True, blank=True,
         max_length=256)
+    customer_chat_id = models.CharField(verbose_name='Chat ID Покупателя', null=True, blank=True,
+    max_length=256)
     order_details = jsonfield.JSONField(verbose_name='Детали заказа', default='Пока нет ничего')
     order_price  = models.PositiveIntegerField(
         verbose_name='Цена заказа',
