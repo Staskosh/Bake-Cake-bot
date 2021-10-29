@@ -23,4 +23,3 @@ class Product_parametersAdmin(admin.ModelAdmin):
 class OrderAdmin(admin.ModelAdmin):
     list_display = ('order_number', 'customer_chat_id', 'order_details','order_status', 'order_price', 'comments')
     list_filter = ["order_status"]
-# Register your models here.

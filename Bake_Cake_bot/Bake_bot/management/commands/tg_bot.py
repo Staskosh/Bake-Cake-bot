@@ -7,7 +7,6 @@ TG_TOKEN = '2087101616:AAEhpiKxkxaImTkIvEvy8hV1MiAlpxcIr_4'
 from environs import Env
 
 from django.core.management.base import BaseCommand
-from django.db.models import F
 from Bake_bot.models import Customer, Product, Product_properties, Product_parameters, Order
 
 import logging
@@ -48,33 +47,10 @@ logger = logging.getLogger(__name__)
     # предлагает подтвердить заказ, def confirm_order
     SEND_ORDER,  # считает стоимость заказа, записывает заказ в БД, def send_order
 ) = range(15)
-prices = {
-    '1 уровень': 400,
-    '2 уровня': 750,
-    '3 уровня': 1100,
-    'Квадрат': 600,
-    'Круг': 400,
-    'Прямоугольник': 1000,
-    'Без топпинга': 0,
-    'Белый соус': 200,
-    'Карамельный сироп': 180,
-    'Кленовый сироп': 200,
-    'Клубничный сироп': 300,
-    'Черничный сироп': 350,
-    'Молочный шоколад': 200,
-    'Ежевика': 400,
-    'Малина': 300,
-    'Голубика': 450,
-    'Клубника': 500,
-    'Без декора': 0,
-    'Фисташки': 300,
-    'Безе': 400,
-    'Фундук': 350,
-    'Пекан': 300,
-    'Маршмеллоу': 200,
-    'Марципан': 280,
-    'Надпись': 500,
-}
+
+prices = { }
+for parameter in Product_parameters.objects.filter(product_property__property_name__contains=''):
+    prices[parameter.parameter_name] = parameter.parameter_price
 
 
 # кнопки
@@ -547,10 +523,10 @@ def send_order(update: Update, context: CallbackContext):
 def create_new_order(chat_id, details, price):
     print(Customer.objects.get(external_id=chat_id).first_name)
     order = Order.objects.create(
-    order_number=Order.objects.latest('order_number').order_number + 1,
-    customer_chat_id=chat_id,
-    order_details=details,
-    order_price=price,
+        order_number=Order.objects.latest('order_number').order_number + 1,
+        customer_chat_id=chat_id,
+        order_details=details,
+        order_price=price,
     )
     order.save
     temp_order.clear()
