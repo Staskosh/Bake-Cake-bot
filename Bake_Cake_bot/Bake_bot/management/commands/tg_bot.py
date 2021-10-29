@@ -1,5 +1,9 @@
 # @BakeCakeBot
 TG_TOKEN = '2087101616:AAEhpiKxkxaImTkIvEvy8hV1MiAlpxcIr_4'
+
+
+
+
 from environs import Env
 
 from django.core.management.base import BaseCommand
@@ -140,8 +144,14 @@ def add_pd(update, context):
             )
             return CONTACT
     elif answer == 'Отказаться':
+        with open("pd.pdf", 'rb') as file:
+            context.bot.send_document(chat_id=update.message.chat_id, document=file)
+        reply_keyboard = [['Принять', 'Отказаться']]
         update.message.reply_text(
-            f'Извините, без согласия на обработку данных заказы невозможны.',
+            text='Извините, без согласия на обработку данных заказы невозможны.',
+            reply_markup=ReplyKeyboardMarkup(
+                reply_keyboard, one_time_keyboard=True, resize_keyboard=True
+            ),
         )
         return PD
 
@@ -194,7 +204,22 @@ def make_cake(update: Update, context):
             'Собрать новый торт или посмотреть заказы?',
             reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
         )
-        return MAIN
+        return ORDER
+    
+    if user_input == 'Ваши заказы':
+        orders = Order.objects.filter(customer_chat_id=update.effective_message.chat_id)
+        for order in orders:
+            update.message.reply_text(
+            f'Заказ {order.order_number}: цена {order.order_price} руб., статус "{order.order_status}",' 
+            f'детали - {order.order_details}',
+            )
+        context.bot.send_message(
+            chat_id=update.effective_message.chat_id,
+            text = 'Собрать новый торт или посмотреть заказы?',
+            reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
+        )
+        return ORDER
+
     parameters = []
     for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Количество уровней'):
         parameters.append(parameter.parameter_name)
