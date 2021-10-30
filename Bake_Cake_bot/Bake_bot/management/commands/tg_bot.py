@@ -1,4 +1,5 @@
 # @BakeCakeBot
+
 from environs import Env
 
 from django.core.management.base import BaseCommand
@@ -22,7 +23,6 @@ env = Env()
 env.read_env()
 
 telegram_token = env.str('TG_TOKEN')
-
 
 # Enable logging
 logging.basicConfig(
@@ -50,11 +50,12 @@ logger = logging.getLogger(__name__)
     SEND_ORDER,  # считает стоимость заказа, записывает заказ в БД, def send_order
 ) = range(15)
 
-prices = { }
+prices = {}
 for parameter in Product_parameters.objects.filter(product_property__property_name__contains=''):
     prices[parameter.parameter_name] = parameter.parameter_price
 
 telegram_token = env.str('TG_TOKEN')
+
 
 # БОТ - начало
 def start(update: Update, context: CallbackContext) -> int:
@@ -89,12 +90,12 @@ def start(update: Update, context: CallbackContext) -> int:
         return PD
     if not is_contact:
         update.message.reply_text(
-            text=(f'Напишите, пожалуйста, телефон для связи.')
+            text=f'Напишите, пожалуйста, телефон для связи.'
         )
         return CONTACT
     if not is_address:
         update.message.reply_text(
-            text=(f'Напишите, пожалуйста, адрес для доставки.')
+            text=f'Напишите, пожалуйста, адрес для доставки.'
         )
         return LOCATION
 
@@ -108,7 +109,6 @@ def start(update: Update, context: CallbackContext) -> int:
 
 
 def is_orders(update):
-    # кнопки
     main_keyboard = [
         [KeyboardButton('Собрать торт'), KeyboardButton('Ваши заказы')]
     ]
@@ -162,7 +162,6 @@ def add_pd(update, context):
         return PD
 
 
-
 # добавляем контакты в БД
 def add_contact(update, context):
     customer = Customer.objects.get(external_id=update.message.chat_id)
@@ -197,7 +196,9 @@ def add_address(update: Update, context):
                 f'добавлен контакт {customer.home_address}')
     return ORDER
 
+
 temp_order = {}
+
 
 # БОТ - собрать торт
 def make_cake(update: Update, context):
@@ -229,9 +230,12 @@ def make_cake(update: Update, context):
 
     if user_input == 'Собрать торт':
         parameters = []
-    for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Количество уровней'):
-        parameters.append(parameter.parameter_name)
-    option1_keyboard = [parameters, ['ГЛАВНОЕ МЕНЮ']]
+        number_of_cake_levels = Product_parameters.objects.filter(
+            product_property__property_name__contains='Количество уровней'
+        )
+        for parameter in number_of_cake_levels:
+            parameters.append(parameter.parameter_name)
+        option1_keyboard = [parameters, ['ГЛАВНОЕ МЕНЮ']]
         update.message.reply_text(
             'Начнем! Выберите количество уровней',
             reply_markup=ReplyKeyboardMarkup(option1_keyboard, resize_keyboard=True, one_time_keyboard=True)
@@ -314,17 +318,18 @@ def choose_option3(update: Update, context: CallbackContext):
     context.user_data['Топпинг'] = user_input
 
     if user_input == 'ГЛАВНОЕ МЕНЮ':
+        main_keyboard = is_orders(update)
         update.message.reply_text(
             'Собрать новый торт или посмотреть заказы?',
             reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
         )
         return MAIN
     option4_keyboard = [
-                    ['Без ягод'],
-                    ['Ежевика', 'Малина'],
-                    ['Голубика', 'Клубника'],
-                    ['ГЛАВНОЕ МЕНЮ']
-                    ]
+        ['Без ягод'],
+        ['Ежевика', 'Малина'],
+        ['Голубика', 'Клубника'],
+        ['ГЛАВНОЕ МЕНЮ']
+    ]
     update.message.reply_text('Выберите ягоды',
                               reply_markup=ReplyKeyboardMarkup(option4_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
@@ -417,7 +422,7 @@ def choose_option7(update: Update, context: CallbackContext):
     option8_keyboard = [['Не менять адрес'], ['ГЛАВНОЕ МЕНЮ']]
     address = Customer.objects.get(external_id=update.message.chat_id).home_address
     update.message.reply_text(f'Ваш текущий адрес: {address}. '
-                             'Если вы хотите изменить адрес доставки - напишите его. '
+                              'Если вы хотите изменить адрес доставки - напишите его. '
                               'или нажмите "Не менять адрес"',
                               reply_markup=ReplyKeyboardMarkup(option8_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
@@ -463,9 +468,9 @@ def confirm_order(update: Update, context: CallbackContext):
         if date_time_delivery < datetime.now() - timedelta(minutes=1):
             option9_keyboard = [['Как можно быстрее'], ['ГЛАВНОЕ МЕНЮ']]
             update.message.reply_text(
-            'Время не может быть раньше текущего! Введите заново '
-            '(например: 27.10.2021 10-00) или нажмите "Как можно быстрее".',
-            reply_markup=ReplyKeyboardMarkup(option9_keyboard, resize_keyboard=True, one_time_keyboard=True))
+                'Время не может быть раньше текущего! Введите заново '
+                '(например: 27.10.2021 10-00) или нажмите "Как можно быстрее".',
+                reply_markup=ReplyKeyboardMarkup(option9_keyboard, resize_keyboard=True, one_time_keyboard=True))
             return CONFIRM_ORDER
 
         if date_time_delivery < datetime.now() + timedelta(hours=24):
@@ -504,8 +509,8 @@ def confirm_order(update: Update, context: CallbackContext):
     )
     order_keyboard = [['Да', 'Нет'], ['ГЛАВНОЕ МЕНЮ']]
     update.message.reply_text(f'Проверьте детали вашего заказа: {temp_order} '
-                                ' '
-                                'Заказать торт?',
+                              ' '
+                              'Заказать торт?',
                               reply_markup=ReplyKeyboardMarkup(order_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
     return SEND_ORDER
@@ -613,7 +618,7 @@ class Command(BaseCommand):
 
             },
             fallbacks=[MessageHandler(Filters.text & ~Filters.command, unknown)],
-        allow_reentry=True,
+            allow_reentry=True,
         )
 
         dispatcher.add_handler(conv_handler)
