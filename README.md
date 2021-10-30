@@ -8,7 +8,11 @@ The service allows customers to order a cake choosing size, shape, decor, sign, 
 
 - create new bot in Telegram and get the token   
   (you can obtain bot from @BotFather in Telegram, [See example](https://telegra.ph/Awesome-Telegram-Bot-11-11))
-- create the file .env end put your token in `TG_TOKEN`
+- create the file .env and fill in this data:
+  - TG_TOKEN
+  - DEBUG
+  - SECRET_KEY
+  - ALLOWED_HOSTS
 - create file pd.pdf with personal data agreements for customers
 
 
