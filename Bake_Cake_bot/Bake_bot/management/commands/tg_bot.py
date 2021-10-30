@@ -1,5 +1,5 @@
 # @BakeCakeBot
-TG_TOKEN = '2087101616:AAEhpiKxkxaImTkIvEvy8hV1MiAlpxcIr_4'
+
 from environs import Env
 
 from django.core.management.base import BaseCommand
@@ -55,6 +55,7 @@ prices = { }
 for parameter in Product_parameters.objects.filter(product_property__property_name__contains=''):
     prices[parameter.parameter_name] = parameter.parameter_price
 
+
 telegram_token = env.str('TG_TOKEN')
 
 # БОТ - начало
@@ -107,13 +108,13 @@ def start(update: Update, context: CallbackContext) -> int:
                               )
     return ORDER
 
-
 def is_orders(update):
     # кнопки
     main_keyboard = [
         [KeyboardButton('Собрать торт'), KeyboardButton('Ваши заказы')]
     ]
-    get_orders = Order.objects.filter(customer=update.message.chat_id)
+    get_orders = Order.objects.filter(customer_chat_id=update.message.chat_id)
+
     if not get_orders:
         main_keyboard = [
             [KeyboardButton('Собрать торт')]
@@ -213,14 +214,6 @@ def make_cake(update: Update, context):
     logger.info("choice of %s, %s: %s", user.first_name,
                 user.id, update.message.text)
     user_input = update.effective_message.text
-    if user_input == 'Собрать торт':
-        update.message.reply_text(
-            'Собрать новый торт',
-            # reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
-        )
-
-    if user_input == 'Просмотреть заказы':
-        pass
 
     if user_input == 'ГЛАВНОЕ МЕНЮ':
         update.message.reply_text(
@@ -244,10 +237,7 @@ def make_cake(update: Update, context):
         return ORDER
 
     if user_input == 'Собрать торт':
-        parameters = []
-        for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Количество уровней'):
-            parameters.append(parameter.parameter_name)
-        option1_keyboard = [parameters, ['ГЛАВНОЕ МЕНЮ']]
+        option1_keyboard = [['1 уровень', '2 уровня', '3 уровня'], ['ГЛАВНОЕ МЕНЮ']]
         update.message.reply_text(
             'Начнем! Выберите количество уровней',
             reply_markup=ReplyKeyboardMarkup(option1_keyboard, resize_keyboard=True, one_time_keyboard=True)
@@ -270,10 +260,7 @@ def choose_option1(update: Update, context: CallbackContext):
             reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
         )
         return MAIN
-    parameters = []
-    for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Форма'):
-        parameters.append(parameter.parameter_name)
-    option2_keyboard = [parameters, ['ГЛАВНОЕ МЕНЮ']]
+    option2_keyboard = [['Квадрат', 'Круг', 'Прямоугольник'], ['ГЛАВНОЕ МЕНЮ']]
     update.message.reply_text('Выберите форму',
                               reply_markup=ReplyKeyboardMarkup(option2_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
@@ -286,17 +273,19 @@ def choose_option2(update: Update, context: CallbackContext):
     context.user_data['Форма'] = user_input
 
     if user_input == 'ГЛАВНОЕ МЕНЮ':
+        main_keyboard = is_orders(update)
         update.message.reply_text(
             'Собрать новый торт или посмотреть заказы?',
             reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
         )
         return MAIN
-    parameters = []
-    for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Топпинг'):
-        parameters.append(parameter.parameter_name)
-
-    option3_keyboard = [parameters,['ГЛАВНОЕ МЕНЮ']
-    ]
+    option3_keyboard = [
+                    ['Без топпинга'],
+                    ['Белый соус', 'Карамельный сироп'], 
+                    ['Кленовый сироп', 'Клубничный сироп'], 
+                    ['Черничный сироп', 'Молочный шоколад'],
+                    ['ГЛАВНОЕ МЕНЮ']
+                    ]
     update.message.reply_text('Выберите топпинг',
                               reply_markup=ReplyKeyboardMarkup(option3_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
@@ -309,18 +298,18 @@ def choose_option3(update: Update, context: CallbackContext):
     context.user_data['Топпинг'] = user_input
 
     if user_input == 'ГЛАВНОЕ МЕНЮ':
+        main_keyboard = is_orders(update)
         update.message.reply_text(
             'Собрать новый торт или посмотреть заказы?',
             reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
         )
         return MAIN
-    parameters = []
-    for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Ягоды'):
-        parameters.append(parameter.parameter_name)
-
-    option4_keyboard = [parameters,
-        ['ГЛАВНОЕ МЕНЮ']
-    ]
+    option4_keyboard = [
+                    ['Без ягод'],
+                    ['Ежевика', 'Малина'], 
+                    ['Голубика', 'Клубника'], 
+                    ['ГЛАВНОЕ МЕНЮ']
+                    ]
     update.message.reply_text('Выберите ягоды',
                               reply_markup=ReplyKeyboardMarkup(option4_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
@@ -339,13 +328,12 @@ def choose_option4(update: Update, context: CallbackContext):
             reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
         )
         return MAIN
-    parameters = []
-    for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Декор'):
-        parameters.append(parameter.parameter_name)
-
-    option5_keyboard = [parameters,
-        ['ГЛАВНОЕ МЕНЮ']
-    ]
+    option5_keyboard = [
+                       ['Без декора'], 
+                       ['Фисташки', 'Безе', 'Фундук'], 
+                       ['Пекан', 'Маршмеллоу', 'Марципан'], 
+                       ['ГЛАВНОЕ МЕНЮ']
+                       ]
     update.message.reply_text('Выберите декор',
                               reply_markup=ReplyKeyboardMarkup(option5_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
@@ -412,7 +400,9 @@ def choose_option7(update: Update, context: CallbackContext):
         return MAIN
 
     option8_keyboard = [['Не менять адрес'], ['ГЛАВНОЕ МЕНЮ']]
-    update.message.reply_text('Если вы хотите изменить адрес доставки - напишите его '
+    address = Customer.objects.get(external_id=update.message.chat_id).home_address
+    update.message.reply_text(f'Ваш текущий адрес: {address}. '
+                             'Если вы хотите изменить адрес доставки - напишите его. '
                               'или нажмите "Не менять адрес"',
                               reply_markup=ReplyKeyboardMarkup(option8_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
@@ -455,7 +445,7 @@ def confirm_order(update: Update, context: CallbackContext):
         date_time_delivery = datetime.strptime(user_input, "%d.%m.%Y %H-%M")
         context.user_data['Дата и время доставки'] = str(date_time_delivery)
 
-        if date_time_delivery < datetime.now():
+        if date_time_delivery < datetime.now() - timedelta(minutes=1):
             option9_keyboard = [['Как можно быстрее'], ['ГЛАВНОЕ МЕНЮ']]
             update.message.reply_text(
             'Время не может быть раньше текущего! Введите заново '
@@ -481,7 +471,7 @@ def confirm_order(update: Update, context: CallbackContext):
             'Собрать новый торт или посмотреть заказы?',
             reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
         )
-        return MAIN
+        return ORDER
 
     temp_order.update(
         {
@@ -498,7 +488,9 @@ def confirm_order(update: Update, context: CallbackContext):
         }
     )
     order_keyboard = [['Да', 'Нет'], ['ГЛАВНОЕ МЕНЮ']]
-    update.message.reply_text('Заказать торт?',
+    update.message.reply_text(f'Проверьте детали вашего заказа: {temp_order} '
+                                ' '
+                                'Заказать торт?',
                               reply_markup=ReplyKeyboardMarkup(order_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
     return SEND_ORDER
@@ -529,13 +521,13 @@ def send_order(update: Update, context: CallbackContext):
                 total_price += prices.get(price)
             except:
                 pass
-        print(context.user_data['Надпись'])
+
         if context.user_data['Надпись'][0] == 'Есть':
             total_price += 500
         if context.user_data['Срочность'] == 'Срочно':
             total_price *= 1.2
 
-        order_keyboard = [['Собрать торт'], ['ГЛАВНОЕ МЕНЮ']]
+        order_keyboard = [['Собрать торт'], ['Ваши заказы'], ['ГЛАВНОЕ МЕНЮ']]
         update.message.reply_text(
             f'Заказ принят! Стоимость вашего заказа {total_price} руб.',
             reply_markup=ReplyKeyboardMarkup(order_keyboard, resize_keyboard=True, one_time_keyboard=True))
@@ -547,7 +539,6 @@ def send_order(update: Update, context: CallbackContext):
 
 # создаем заказ в БД
 def create_new_order(chat_id, details, price):
-    print(Customer.objects.get(external_id=chat_id).first_name)
     order = Order.objects.create(
         order_number=Order.objects.latest('order_number').order_number + 1,
         customer_chat_id=chat_id,
