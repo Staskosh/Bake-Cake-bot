@@ -1,9 +1,5 @@
 # @BakeCakeBot
 TG_TOKEN = '2087101616:AAEhpiKxkxaImTkIvEvy8hV1MiAlpxcIr_4'
-
-
-
-
 from environs import Env
 
 from django.core.management.base import BaseCommand
@@ -144,16 +140,11 @@ def add_pd(update, context):
             )
             return CONTACT
     elif answer == 'Отказаться':
-        with open("pd.pdf", 'rb') as file:
-            context.bot.send_document(chat_id=update.message.chat_id, document=file)
-        reply_keyboard = [['Принять', 'Отказаться']]
         update.message.reply_text(
-            text='Извините, без согласия на обработку данных заказы невозможны.',
-            reply_markup=ReplyKeyboardMarkup(
-                reply_keyboard, one_time_keyboard=True, resize_keyboard=True
-            ),
+            f'Извините, без согласия на обработку данных заказы невозможны.',
         )
         return PD
+
 
 
 # добавляем контакты в БД
@@ -189,9 +180,7 @@ def add_address(update: Update, context):
                 f'добавлен контакт {customer.home_address}')
     return ORDER
 
-
 temp_order = {}
-
 
 # БОТ - собрать торт
 def make_cake(update: Update, context):
@@ -204,22 +193,7 @@ def make_cake(update: Update, context):
             'Собрать новый торт или посмотреть заказы?',
             reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
         )
-        return ORDER
-    
-    if user_input == 'Ваши заказы':
-        orders = Order.objects.filter(customer_chat_id=update.effective_message.chat_id)
-        for order in orders:
-            update.message.reply_text(
-            f'Заказ {order.order_number}: цена {order.order_price} руб., статус "{order.order_status}",' 
-            f'детали - {order.order_details}',
-            )
-        context.bot.send_message(
-            chat_id=update.effective_message.chat_id,
-            text = 'Собрать новый торт или посмотреть заказы?',
-            reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
-        )
-        return ORDER
-
+        return MAIN
     parameters = []
     for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Количество уровней'):
         parameters.append(parameter.parameter_name)
@@ -229,6 +203,16 @@ def make_cake(update: Update, context):
         reply_markup=ReplyKeyboardMarkup(option1_keyboard, resize_keyboard=True, one_time_keyboard=True)
     )
     return OPTION1
+
+
+def split(arr, size):
+    arrs = []
+    while len(arr) > size:
+        pice = arr[:size]
+        arrs.append(pice)
+        arr = arr[size:]
+    arrs.append(arr)
+    return arrs
 
 
 # записывает опцию 'Количество уровней', предлагает опцию 'Форма'
@@ -245,7 +229,10 @@ def choose_option1(update: Update, context: CallbackContext):
     parameters = []
     for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Форма'):
         parameters.append(parameter.parameter_name)
-    option2_keyboard = [parameters, ['ГЛАВНОЕ МЕНЮ']]
+    buttons_list = split(parameters, 3)
+    buttons_list.append(['ГЛАВНОЕ МЕНЮ'])
+    option2_keyboard = buttons_list
+    print(option2_keyboard)
     update.message.reply_text('Выберите форму',
                               reply_markup=ReplyKeyboardMarkup(option2_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
@@ -264,10 +251,20 @@ def choose_option2(update: Update, context: CallbackContext):
         )
         return MAIN
     parameters = []
+    exception_parameter = []
     for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Топпинг'):
+        for word in parameter.parameter_name.split():
+            if word in 'Без':
+                exception_parameter.append(parameter.parameter_name)
         parameters.append(parameter.parameter_name)
-    option3_keyboard = [parameters,['ГЛАВНОЕ МЕНЮ']
-    ]
+        for exception_word in exception_parameter:
+            if parameter.parameter_name in exception_word:
+                parameters.remove(exception_word)
+
+    buttons_list = split(parameters, 3)
+    buttons_list.append(exception_parameter)
+    buttons_list.append(['ГЛАВНОЕ МЕНЮ'])
+    option3_keyboard = buttons_list
     update.message.reply_text('Выберите топпинг',
                               reply_markup=ReplyKeyboardMarkup(option3_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
@@ -311,9 +308,9 @@ def choose_option4(update: Update, context: CallbackContext):
     parameters = []
     for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Декор'):
         parameters.append(parameter.parameter_name)
-    option5_keyboard = [parameters,
-        ['ГЛАВНОЕ МЕНЮ']
-    ]
+    buttons_list = split(parameters, 3)
+    buttons_list.append(['ГЛАВНОЕ МЕНЮ'])
+    option5_keyboard = buttons_list
     update.message.reply_text('Выберите декор',
                               reply_markup=ReplyKeyboardMarkup(option5_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
