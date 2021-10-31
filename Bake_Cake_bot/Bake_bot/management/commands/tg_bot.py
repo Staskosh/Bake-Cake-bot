@@ -1,4 +1,5 @@
 # @BakeCakeBot
+
 from environs import Env
 
 from django.core.management.base import BaseCommand
@@ -22,7 +23,6 @@ env = Env()
 env.read_env()
 
 telegram_token = env.str('TG_TOKEN')
-
 
 # Enable logging
 logging.basicConfig(
@@ -50,11 +50,12 @@ logger = logging.getLogger(__name__)
     SEND_ORDER,  # считает стоимость заказа, записывает заказ в БД, def send_order
 ) = range(15)
 
-prices = { }
+prices = {}
 for parameter in Product_parameters.objects.filter(product_property__property_name__contains=''):
     prices[parameter.parameter_name] = parameter.parameter_price
 
 telegram_token = env.str('TG_TOKEN')
+
 
 # БОТ - начало
 def start(update: Update, context: CallbackContext) -> int:
@@ -89,12 +90,12 @@ def start(update: Update, context: CallbackContext) -> int:
         return PD
     if not is_contact:
         update.message.reply_text(
-            text=(f'Напишите, пожалуйста, телефон для связи.')
+            text=f'Напишите, пожалуйста, телефон для связи.'
         )
         return CONTACT
     if not is_address:
         update.message.reply_text(
-            text=(f'Напишите, пожалуйста, адрес для доставки.')
+            text=f'Напишите, пожалуйста, адрес для доставки.'
         )
         return LOCATION
 
@@ -108,7 +109,6 @@ def start(update: Update, context: CallbackContext) -> int:
 
 
 def is_orders(update):
-    # кнопки
     main_keyboard = [
         [KeyboardButton('Собрать торт'), KeyboardButton('Ваши заказы')]
     ]
@@ -162,7 +162,6 @@ def add_pd(update, context):
         return PD
 
 
-
 # добавляем контакты в БД
 def add_contact(update, context):
     customer = Customer.objects.get(external_id=update.message.chat_id)
@@ -197,7 +196,9 @@ def add_address(update: Update, context):
                 f'добавлен контакт {customer.home_address}')
     return ORDER
 
+
 temp_order = {}
+
 
 # БОТ - собрать торт
 def make_cake(update: Update, context):
@@ -316,6 +317,7 @@ def choose_option3(update: Update, context: CallbackContext):
     context.user_data['Топпинг'] = user_input
 
     if user_input == 'ГЛАВНОЕ МЕНЮ':
+        main_keyboard = is_orders(update)
         update.message.reply_text(
             'Собрать новый торт или посмотреть заказы?',
             reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
@@ -626,7 +628,7 @@ class Command(BaseCommand):
 
             },
             fallbacks=[MessageHandler(Filters.text & ~Filters.command, unknown)],
-        allow_reentry=True,
+            allow_reentry=True,
         )
 
         dispatcher.add_handler(conv_handler)
