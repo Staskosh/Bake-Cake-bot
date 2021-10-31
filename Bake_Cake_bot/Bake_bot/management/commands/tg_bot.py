@@ -63,16 +63,16 @@ def start(update: Update, context: CallbackContext) -> int:
     try:
         Customer.objects.get(external_id=update.message.chat_id)
         update.message.reply_text(
-            f' Здравствуйте, {user.first_name}! '
-            ' Вас приветствует сервис "Изготовление тортов на заказ"! '
-            ' Выберите ингредиенты, форму, основу, надпись, а мы привезем готовый торт к вашему празднику.',
+            f'Здравствуйте, {user.first_name}!\n'
+            'Вас приветствует сервис "Изготовление тортов на заказ"!\n'
+            'Выберите ингредиенты, форму, основу, надпись, а мы привезем готовый торт к вашему празднику.',
             reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
         )
     except:
         update.message.reply_text(
-            f' Здравствуйте, {user.first_name}! '
-            ' Вас приветствует сервис "Изготовление тортов на заказ"! '
-            ' Вы у нас впервые? Давайте зарегистрируемся. ',
+            f'Здравствуйте, {user.first_name}!\n'
+            'Вас приветствует сервис "Изготовление тортов на заказ"!\n'
+            'Вы у нас впервые? Давайте зарегистрируемся.',
         )
     # добавляем юзера в ДБ, проверяем есть ли пд, контакт и адрес
     is_contact, is_address, is_pd = add_user_to_db(update.message.chat_id, user)
@@ -218,7 +218,7 @@ def make_cake(update: Update, context):
         orders = Order.objects.filter(customer_chat_id=update.effective_message.chat_id)
         for order in orders:
             update.message.reply_text(
-                f'Заказ {order.order_number}: цена {order.order_price} руб., статус "{order.order_status}",'
+                f'Заказ {order.order_number}:\nцена {order.order_price} руб.,\nстатус "{order.order_status}",\n'
                 f'детали - {order.order_details}',
             )
         update.message.reply_text(
@@ -229,9 +229,11 @@ def make_cake(update: Update, context):
 
     if user_input == 'Собрать торт':
         parameters = []
-    for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Количество уровней'):
-        parameters.append(parameter.parameter_name)
-    option1_keyboard = [parameters, ['ГЛАВНОЕ МЕНЮ']]
+        for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Количество уровней'):
+            parameters.append(parameter.parameter_name)
+        buttons_list = split(parameters, 3)
+        buttons_list.append(['ГЛАВНОЕ МЕНЮ'])
+        option1_keyboard = [parameters, ['ГЛАВНОЕ МЕНЮ']]
         update.message.reply_text(
             'Начнем! Выберите количество уровней',
             reply_markup=ReplyKeyboardMarkup(option1_keyboard, resize_keyboard=True, one_time_keyboard=True)
@@ -319,12 +321,21 @@ def choose_option3(update: Update, context: CallbackContext):
             reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
         )
         return MAIN
-    option4_keyboard = [
-                    ['Без ягод'],
-                    ['Ежевика', 'Малина'],
-                    ['Голубика', 'Клубника'],
-                    ['ГЛАВНОЕ МЕНЮ']
-                    ]
+    parameters = []
+    exception_parameter = []
+    for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Ягоды'):
+        for word in parameter.parameter_name.split():
+            if word in 'Без':
+                exception_parameter.append(parameter.parameter_name)
+        parameters.append(parameter.parameter_name)
+        for exception_word in exception_parameter:
+            if parameter.parameter_name in exception_word:
+                parameters.remove(exception_word)
+
+    buttons_list = split(parameters, 3)
+    buttons_list.append(exception_parameter)
+    buttons_list.append(['ГЛАВНОЕ МЕНЮ'])
+    option4_keyboard = buttons_list
     update.message.reply_text('Выберите ягоды',
                               reply_markup=ReplyKeyboardMarkup(option4_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
@@ -368,7 +379,7 @@ def choose_option5(update: Update, context: CallbackContext):
         )
         return MAIN
     option6_keyboard = [['Без надписи'], ['ГЛАВНОЕ МЕНЮ']]
-    update.message.reply_text('Мы можем разместить на торте любую надпись, например: "С днем рождения!" '
+    update.message.reply_text('Мы можем разместить на торте любую надпись, например: "С днем рождения!"\n'
                               'Введите текст надписи или нажмите "Без надписи"',
                               reply_markup=ReplyKeyboardMarkup(option6_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
@@ -416,9 +427,9 @@ def choose_option7(update: Update, context: CallbackContext):
 
     option8_keyboard = [['Не менять адрес'], ['ГЛАВНОЕ МЕНЮ']]
     address = Customer.objects.get(external_id=update.message.chat_id).home_address
-    update.message.reply_text(f'Ваш текущий адрес: {address}. '
-                             'Если вы хотите изменить адрес доставки - напишите его. '
-                              'или нажмите "Не менять адрес"',
+    update.message.reply_text(f'Ваш текущий адрес: {address}.\n'
+                             'Если вы хотите изменить адрес доставки - напишите его.\n'
+                              'Или нажмите "Не менять адрес"',
                               reply_markup=ReplyKeyboardMarkup(option8_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
     return OPTION8
@@ -442,8 +453,8 @@ def choose_option8(update: Update, context: CallbackContext):
         return MAIN
 
     option9_keyboard = [['Как можно быстрее'], ['ГЛАВНОЕ МЕНЮ']]
-    update.message.reply_text('Напишите желаемую дату и время доставки в формате "DD.MM.YYYY HH-MM" '
-                              '(например 27.10.2021 10-00) или нажмите "Как можно быстрее". '
+    update.message.reply_text('Напишите желаемую дату и время доставки в формате "DD.MM.YYYY HH-MM"'
+                              '(например 27.10.2021 10-00) или нажмите "Как можно быстрее".\n'
                               'При доставке в ближайшие 24 часа стоимость будет увеличена на 20%',
                               reply_markup=ReplyKeyboardMarkup(option9_keyboard, resize_keyboard=True,
                                                                one_time_keyboard=True))
@@ -463,7 +474,7 @@ def confirm_order(update: Update, context: CallbackContext):
         if date_time_delivery < datetime.now() - timedelta(minutes=1):
             option9_keyboard = [['Как можно быстрее'], ['ГЛАВНОЕ МЕНЮ']]
             update.message.reply_text(
-            'Время не может быть раньше текущего! Введите заново '
+            'Время не может быть раньше текущего! Введите заново\n'
             '(например: 27.10.2021 10-00) или нажмите "Как можно быстрее".',
             reply_markup=ReplyKeyboardMarkup(option9_keyboard, resize_keyboard=True, one_time_keyboard=True))
             return CONFIRM_ORDER
@@ -475,7 +486,7 @@ def confirm_order(update: Update, context: CallbackContext):
     except ValueError:
         option9_keyboard = [['Как можно быстрее'], ['ГЛАВНОЕ МЕНЮ']]
         update.message.reply_text(
-            'Время не соответствует формату "DD.MM.YYYY HH-MM" Введите заново '
+            'Время не соответствует формату "DD.MM.YYYY HH-MM" Введите заново\n'
             '(например: 27.10.2021 10-00) или нажмите "Как можно быстрее".',
             reply_markup=ReplyKeyboardMarkup(option9_keyboard, resize_keyboard=True, one_time_keyboard=True))
         return CONFIRM_ORDER
@@ -503,7 +514,7 @@ def confirm_order(update: Update, context: CallbackContext):
         }
     )
     order_keyboard = [['Да', 'Нет'], ['ГЛАВНОЕ МЕНЮ']]
-    update.message.reply_text(f'Проверьте детали вашего заказа: {temp_order} '
+    update.message.reply_text(f'Проверьте детали вашего заказа: {temp_order}'
                                 ' '
                                 'Заказать торт?',
                               reply_markup=ReplyKeyboardMarkup(order_keyboard, resize_keyboard=True,
@@ -544,18 +555,20 @@ def send_order(update: Update, context: CallbackContext):
 
         order_keyboard = [['Собрать торт'], ['Ваши заказы'], ['ГЛАВНОЕ МЕНЮ']]
         update.message.reply_text(
-            f'Заказ принят! Стоимость вашего заказа {total_price} руб.',
+            f'Заказ принят!\nСтоимость вашего заказа {total_price} руб.',
             reply_markup=ReplyKeyboardMarkup(order_keyboard, resize_keyboard=True, one_time_keyboard=True))
-        logger.info(f"Итоговая цена {total_price} "
-                    f'Выбранные опции {temp_order}')
         create_new_order(update.message.chat_id, str(temp_order), total_price)
     return ORDER
 
 
 # создаем заказ в БД
 def create_new_order(chat_id, details, price):
+    try:
+        order_number = Order.objects.latest('order_number').order_number + 1
+    except Order.DoesNotExist:
+        order_number = 1
     order = Order.objects.create(
-        order_number=Order.objects.latest('order_number').order_number + 1,
+        order_number=order_number,
         customer_chat_id=chat_id,
         order_details=details,
         order_price=price,
