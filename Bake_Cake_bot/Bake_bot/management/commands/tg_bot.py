@@ -1,5 +1,4 @@
 # @BakeCakeBot
-
 from environs import Env
 
 from django.core.management.base import BaseCommand
@@ -23,6 +22,7 @@ env = Env()
 env.read_env()
 
 telegram_token = env.str('TG_TOKEN')
+
 
 # Enable logging
 logging.basicConfig(
@@ -50,12 +50,11 @@ logger = logging.getLogger(__name__)
     SEND_ORDER,  # считает стоимость заказа, записывает заказ в БД, def send_order
 ) = range(15)
 
-prices = {}
+prices = { }
 for parameter in Product_parameters.objects.filter(product_property__property_name__contains=''):
-    prices[parameter.parameter_name] = parameter.parameter_price
+    prices[f'{parameter.parameter_name} (+{parameter.parameter_price})'] = parameter.parameter_price
 
 telegram_token = env.str('TG_TOKEN')
-
 
 # БОТ - начало
 def start(update: Update, context: CallbackContext) -> int:
@@ -87,15 +86,21 @@ def start(update: Update, context: CallbackContext) -> int:
                 reply_keyboard, one_time_keyboard=True, resize_keyboard=True
             ),
         )
+        update.message.reply_text(
+            text='Для заказа нужно ваше согласие на обработку персональных данных',
+            reply_markup=ReplyKeyboardMarkup(
+                reply_keyboard, one_time_keyboard=True, resize_keyboard=True
+            ),
+        )
         return PD
     if not is_contact:
         update.message.reply_text(
-            text=f'Напишите, пожалуйста, телефон для связи.'
+            text=(f'Напишите, пожалуйста, телефон для связи.')
         )
         return CONTACT
     if not is_address:
         update.message.reply_text(
-            text=f'Напишите, пожалуйста, адрес для доставки.'
+            text=(f'Напишите, пожалуйста, адрес для доставки.')
         )
         return LOCATION
 
@@ -109,6 +114,7 @@ def start(update: Update, context: CallbackContext) -> int:
 
 
 def is_orders(update):
+    # кнопки
     main_keyboard = [
         [KeyboardButton('Собрать торт'), KeyboardButton('Ваши заказы')]
     ]
@@ -162,6 +168,7 @@ def add_pd(update, context):
         return PD
 
 
+
 # добавляем контакты в БД
 def add_contact(update, context):
     customer = Customer.objects.get(external_id=update.message.chat_id)
@@ -196,9 +203,7 @@ def add_address(update: Update, context):
                 f'добавлен контакт {customer.home_address}')
     return ORDER
 
-
 temp_order = {}
-
 
 # БОТ - собрать торт
 def make_cake(update: Update, context):
@@ -231,13 +236,13 @@ def make_cake(update: Update, context):
     if user_input == 'Собрать торт':
         parameters = []
         for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Количество уровней'):
-            parameters.append(parameter.parameter_name)
+            parameters.append(f'{parameter.parameter_name} (+{parameter.parameter_price})')
         buttons_list = split(parameters, 3)
         buttons_list.append(['ГЛАВНОЕ МЕНЮ'])
         option1_keyboard = [parameters, ['ГЛАВНОЕ МЕНЮ']]
         update.message.reply_text(
             'Начнем! Выберите количество уровней',
-            reply_markup=ReplyKeyboardMarkup(option1_keyboard, resize_keyboard=True, one_time_keyboard=True)
+            reply_markup=ReplyKeyboardMarkup(option1_keyboard, resize_keyboard=True, one_time_keyboard=True),
         )
         return OPTION1
     else:
@@ -268,7 +273,7 @@ def choose_option1(update: Update, context: CallbackContext):
         return MAIN
     parameters = []
     for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Форма'):
-        parameters.append(parameter.parameter_name)
+        parameters.append(f'{parameter.parameter_name} (+{parameter.parameter_price})')
     buttons_list = split(parameters, 3)
     buttons_list.append(['ГЛАВНОЕ МЕНЮ'])
     option2_keyboard = buttons_list
@@ -295,8 +300,8 @@ def choose_option2(update: Update, context: CallbackContext):
     for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Топпинг'):
         for word in parameter.parameter_name.split():
             if word in 'Без':
-                exception_parameter.append(parameter.parameter_name)
-        parameters.append(parameter.parameter_name)
+                exception_parameter.append(f'{parameter.parameter_name} (+{parameter.parameter_price})')
+        parameters.append(f'{parameter.parameter_name} (+{parameter.parameter_price})')
         for exception_word in exception_parameter:
             if parameter.parameter_name in exception_word:
                 parameters.remove(exception_word)
@@ -317,7 +322,6 @@ def choose_option3(update: Update, context: CallbackContext):
     context.user_data['Топпинг'] = user_input
 
     if user_input == 'ГЛАВНОЕ МЕНЮ':
-        main_keyboard = is_orders(update)
         update.message.reply_text(
             'Собрать новый торт или посмотреть заказы?',
             reply_markup=ReplyKeyboardMarkup(main_keyboard, resize_keyboard=True, one_time_keyboard=True)
@@ -328,8 +332,8 @@ def choose_option3(update: Update, context: CallbackContext):
     for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Ягоды'):
         for word in parameter.parameter_name.split():
             if word in 'Без':
-                exception_parameter.append(parameter.parameter_name)
-        parameters.append(parameter.parameter_name)
+                exception_parameter.append(f'{parameter.parameter_name} (+{parameter.parameter_price})')
+        parameters.append(f'{parameter.parameter_name} (+{parameter.parameter_price})')
         for exception_word in exception_parameter:
             if parameter.parameter_name in exception_word:
                 parameters.remove(exception_word)
@@ -358,7 +362,7 @@ def choose_option4(update: Update, context: CallbackContext):
         return MAIN
     parameters = []
     for parameter in Product_parameters.objects.filter(product_property__property_name__contains='Декор'):
-        parameters.append(parameter.parameter_name)
+        parameters.append(f'{parameter.parameter_name} (+{parameter.parameter_price})')
     buttons_list = split(parameters, 3)
     buttons_list.append(['ГЛАВНОЕ МЕНЮ'])
     option5_keyboard = buttons_list
@@ -628,7 +632,7 @@ class Command(BaseCommand):
 
             },
             fallbacks=[MessageHandler(Filters.text & ~Filters.command, unknown)],
-            allow_reentry=True,
+        allow_reentry=True,
         )
 
         dispatcher.add_handler(conv_handler)
